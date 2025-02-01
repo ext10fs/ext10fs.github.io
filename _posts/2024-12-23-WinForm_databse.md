@@ -235,11 +235,12 @@ private void updateBtn_Click(object sender, EventArgs e)
 - DataSet.Tables : DataTable 컬렉션
 - 테이블명 대소문자 구별
 - XML 파일로 저장 및 로드 가능
-- DataRelation : 테이블 간의 관계 설정 가능
+- DataRelation : 테이블 간의 관계 설정 가능 (여기서는 다루지 않음)
 
 - <a href="https://youtu.be/Ars6Tu_9orA" target="_blank">DataSet 예제</a>
 
 ```csharp
+//버튼을 클릭하면 student 테이블과 major 테이블을 연결하여 출력
 DataSet dataSet;
 
 private void Form1_Load(object sender, EventArgs e)
@@ -284,6 +285,80 @@ private void Form1_Load(object sender, EventArgs e)
     // 데이터 행 추가
     studentTable.Rows.Add(new object[] { null, "윤영주", 2 });
     studentTable.Rows.Add(new object[] { null, "정일영", 1 });
-    studentTable.Rows.Add(new object[] { null, "마재은", 1 });
+    studentTable.Rows.Add(new object[] { null, "김관식", 1 });
+
+    dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+    dataGridView1.MultiSelect = false;
+    dataGridView1.DataSource = studentTable;
+
+    dataGridView2.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+    dataGridView2.MultiSelect = false;
+    dataGridView2.DataSource = majorTable;
+}
+
+private void button1_Click(object sender, EventArgs e)
+{
+    if (dataGridView1.SelectedRows.Count == 0)
+        return;
+
+    var studentTable = dataSet.Tables["student"];
+    var majorTable = dataSet.Tables["major"];
+    
+    var studentRow = studentTable.Rows[dataGridView1.SelectedRows[0].Index];
+    var majorRow = majorTable.Select($"id = {studentRow["major_id"]}").FirstOrDefault();
+    
+    string str;
+    if (majorRow == null)
+        str = $"학생: {studentRow["name"]}, 학과: {studentRow["major_id"]}";
+    else
+        str = $"학생: {studentRow["name"]}, 학과: {majorRow["name"]}";
+    MessageBox.Show(str);
+}
+```
+
+### 7. DataAdapter
+
+- 역할
+  - DB 연결 : open(), close() 불필요
+  - DataSet 채우기
+  - DataSet의 내용을 SQL Server에 업데이트
+
+- <a href="https://youtu.be/vhTPynuMJAQ" target="_blank">DataAdapter 예제</a>
+
+```csharp
+private const string CONNECTION_STRING = "Server=localhost;Database=test;User Id=ilyoung;Password=1234;";
+private SqlDataAdapter dataAdapter;
+private DataSet dataSet;
+
+private void Form1_Load(object sender, EventArgs e)
+{
+    dataAdapter = new SqlDataAdapter();
+    dataSet = new DataSet();
+}
+
+private void button1_Click(object sender, EventArgs e)
+{
+    try
+    {
+        dataSet.Clear();
+        using (var conn = new SqlConnection(CONNECTION_STRING))
+        {
+            string query = "SELECT * FROM Table_student WHERE majorNo = @majorNo";
+            using (var command = new SqlCommand(query, conn))
+            {
+                command.Parameters.AddWithValue("@majorNo", textBox1.Text.Trim());
+                dataAdapter.SelectCommand = command;
+                
+                if (dataAdapter.Fill(dataSet, "Table_student") == 0)
+                    MessageBox.Show("찾는 데이터가 없습니다", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                else                
+                    dataGridView1.DataSource = dataSet.Tables["Table_student"];
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"데이터 조회 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
 }
 ```
