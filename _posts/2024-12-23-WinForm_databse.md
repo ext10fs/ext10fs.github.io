@@ -320,45 +320,226 @@ private void button1_Click(object sender, EventArgs e)
 
 - 역할
   - DB 연결 : open(), close() 불필요
-  - DataSet 채우기
+  - DataSet 채우기 : fill()
   - DataSet의 내용을 SQL Server에 업데이트
 
 - <a href="https://youtu.be/vhTPynuMJAQ" target="_blank">DataAdapter 예제</a>
 
 ```csharp
+// ExecuteNonQuery()로 구현(예전 방식)
+private DataSet dataSet;
+private SqlConnection conn;
 private const string CONNECTION_STRING = "Server=localhost;Database=test;User Id=ilyoung;Password=1234;";
 private SqlDataAdapter dataAdapter;
-private DataSet dataSet;
+
+private void SetDataGridView()
+{
+    dataSet.Clear();
+
+    string query = "SELECT * FROM Table_student";
+    using (var cmd = new SqlCommand(query, conn))
+    {
+        dataAdapter.SelectCommand = cmd;
+        dataAdapter.Fill(dataSet, "Table_student");
+        dataGridView1.DataSource = dataSet.Tables["Table_student"];
+    }
+}
 
 private void Form1_Load(object sender, EventArgs e)
 {
-    dataAdapter = new SqlDataAdapter();
-    dataSet = new DataSet();
-}
-
-private void button1_Click(object sender, EventArgs e)
-{
     try
     {
-        dataSet.Clear();
-        using (var conn = new SqlConnection(CONNECTION_STRING))
-        {
-            string query = "SELECT * FROM Table_student WHERE majorNo = @majorNo";
-            using (var command = new SqlCommand(query, conn))
-            {
-                command.Parameters.AddWithValue("@majorNo", textBox1.Text.Trim());
-                dataAdapter.SelectCommand = command;
-                
-                if (dataAdapter.Fill(dataSet, "Table_student") == 0)
-                    MessageBox.Show("찾는 데이터가 없습니다", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                else                
-                    dataGridView1.DataSource = dataSet.Tables["Table_student"];
-            }
-        }
+        dataAdapter = new SqlDataAdapter();
+        dataSet = new DataSet();
+
+        conn = new SqlConnection(CONNECTION_STRING); //SqlConnection 객체에 셋팅만 해줌
+        conn.Open(); // 실제 DB connect
+
+        SetDataGridView();
     }
     catch (Exception ex)
     {
-        MessageBox.Show($"데이터 조회 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        MessageBox.Show($"Form1_Load() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void InsertButton_Click(object sender, EventArgs e)
+{
+    try
+    {
+        string query = "INSERT INTO Table_student (name, majorNo) VALUES(@name, @majorNo)";
+        using (var cmd = new SqlCommand(query, conn))
+        {
+            cmd.Parameters.AddWithValue("@name", textBox1.Text.Trim());
+            cmd.Parameters.AddWithValue("@majorNo", textBox2.Text.Trim());
+            dataAdapter.InsertCommand = cmd;
+            dataAdapter.InsertCommand.ExecuteNonQuery();
+        }
+
+        SetDataGridView();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"InsertButton_Click() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void button3_Click(object sender, EventArgs e)
+{
+    if (dataGridView1.CurrentRow == null)
+        return;
+
+    try
+    {
+        string query = "UPDATE Table_student SET name = @name, majorNo = @majorNo WHERE no = @no";
+        using (var cmd = new SqlCommand(query, conn))
+        {
+            cmd.Parameters.AddWithValue("@name", textBox1.Text.Trim());
+            cmd.Parameters.AddWithValue("@majorNo", textBox2.Text.Trim());
+            cmd.Parameters.AddWithValue("@no", dataGridView1.CurrentRow.Cells["no"].Value);
+            dataAdapter.UpdateCommand = cmd;
+            dataAdapter.UpdateCommand.ExecuteNonQuery();
+        }
+        
+        SetDataGridView();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"button2_Click() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void DeleteButton_Click(object sender, EventArgs e)
+{
+    try
+    {
+        if (dataGridView1.CurrentRow == null)
+            return;
+
+        string query = "DELETE FROM Table_student WHERE no = @no";
+        using (var cmd = new SqlCommand(query, conn))
+        {
+            cmd.Parameters.AddWithValue("@no", dataGridView1.CurrentRow.Cells["no"].Value);
+            dataAdapter.DeleteCommand = cmd;
+            dataAdapter.DeleteCommand.ExecuteNonQuery();
+        }
+
+        SetDataGridView();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"DeleteButton_Click() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+{
+    conn?.Close();
+    conn?.Dispose();
+}
+```
+
+- SqlCommandBuilder : join이 없는 일반적인 SQL문을 자동 생성
+  - 하나의 테이블만 처리 가능
+  - 기본키가 반드시 있어야 한다
+  - SqlDataAdapter 생성할때 select문을 반드시 명시해야 한다
+
+```csharp
+// SqlCommandBuilder로 구현
+private DataSet dataSet;
+private SqlConnection conn;
+private const string CONNECTION_STRING = "Server=localhost;Database=test;User Id=ilyoung;Password=1234;";
+private SqlDataAdapter dataAdapter;
+private SqlCommandBuilder cmdBuilder;
+
+private void RefreshDataGridView()
+{
+    dataSet.Tables["Table_student"].Clear();
+    dataAdapter.Fill(dataSet, "Table_student");
+    dataGridView1.DataSource = dataSet.Tables["Table_student"];
+}
+
+private void Form1_Load(object sender, EventArgs e)
+{
+    try
+    {
+        conn = new SqlConnection(CONNECTION_STRING);
+        conn.Open();
+
+        // SqlDataAdapter에 SELECT 구문을 할당하면, 이후 SqlCommandBuilder로 CRUD 명령어가 자동 생성됩니다.
+        dataAdapter = new SqlDataAdapter("SELECT * FROM Table_student", conn);
+        cmdBuilder = new SqlCommandBuilder(dataAdapter);
+
+        dataSet = new DataSet();
+        dataAdapter.Fill(dataSet, "Table_student");
+        dataGridView1.DataSource = dataSet.Tables["Table_student"];
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Form1_Load() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+{
+    conn?.Dispose();
+}
+
+private void InsertButton_Click(object sender, EventArgs e)
+{
+    try
+    {
+        DataTable studentTable = dataSet.Tables["Table_student"];
+        DataRow row = studentTable.NewRow();
+        row["name"] = textBox1.Text.Trim();
+        row["majorNo"] = textBox2.Text.Trim();
+        studentTable.Rows.Add(row);
+        dataAdapter.Update(dataSet, "Table_student"); // DataSet에 적용된 변경사항을 DB에 업데이트합니다.
+        RefreshDataGridView();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"InsertButton_Click() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void updateButton_Click(object sender, EventArgs e)
+{
+    if (dataGridView1.CurrentRow == null)
+        return;
+
+    try
+    {
+        int idx = dataGridView1.CurrentRow.Index;
+        DataTable studentTable = dataSet.Tables["Table_student"];
+        DataRow row = studentTable.Rows[idx];
+        row["name"] = textBox1.Text.Trim();
+        row["majorNo"] = textBox2.Text.Trim();
+        dataAdapter.Update(dataSet, "Table_student"); // 변경된 내용을 DB에 업데이트합니다.
+        RefreshDataGridView();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"updateButton_Click() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+
+private void DeleteButton_Click(object sender, EventArgs e)
+{
+     if (dataGridView1.CurrentRow == null)
+            return;
+
+    try
+    {
+        int idx = dataGridView1.CurrentRow.Index;
+        DataTable studentTable = dataSet.Tables["Table_student"];
+        studentTable.Rows[idx].Delete();
+        dataAdapter.Update(dataSet, "Table_student");  // 삭제된 내용을 DB에 업데이트합니다.
+        RefreshDataGridView();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"DeleteButton_Click() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }
 ```
