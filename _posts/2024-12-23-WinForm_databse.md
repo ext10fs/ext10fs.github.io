@@ -235,7 +235,6 @@ private void updateBtn_Click(object sender, EventArgs e)
 - DataSet.Tables : DataTable 컬렉션
 - 테이블명 대소문자 구별
 - XML 파일로 저장 및 로드 가능
-- DataRelation : 테이블 간의 관계 설정 가능 (여기서는 다루지 않음)
 
 - <a href="https://youtu.be/Ars6Tu_9orA" target="_blank">DataSet 예제</a>
 
@@ -439,13 +438,16 @@ private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 }
 ```
 
-- SqlCommandBuilder : join이 없는 일반적인 SQL문을 자동 생성
-  - 하나의 테이블만 처리 가능
-  - 기본키가 반드시 있어야 한다
-  - SqlDataAdapter 생성할때 select문을 반드시 명시해야 한다
+### 8. SqlCommandBuilder
+
+- join이 없는 일반적인 SQL문을 자동 생성
+- 하나의 테이블만 처리 가능
+- 기본키가 반드시 있어야 한다
+- SqlDataAdapter 생성할때 select문을 반드시 명시해야 한다
+
+- <a href="https://www.youtube.com/watch?v=4p9o6G6g49s" target="_blank">SqlCommandBuilder 예제</a>
 
 ```csharp
-// SqlCommandBuilder로 구현
 private DataSet dataSet;
 private SqlConnection conn;
 private const string CONNECTION_STRING = "Server=localhost;Database=test;User Id=ilyoung;Password=1234;";
@@ -526,8 +528,8 @@ private void updateButton_Click(object sender, EventArgs e)
 
 private void DeleteButton_Click(object sender, EventArgs e)
 {
-     if (dataGridView1.CurrentRow == null)
-            return;
+    if (dataGridView1.CurrentRow == null)
+        return;
 
     try
     {
@@ -543,3 +545,78 @@ private void DeleteButton_Click(object sender, EventArgs e)
     }
 }
 ```
+
+### 9. DataRelation
+
+- DB에 FK가 이미 설정되어 있더라도
+- DataSet은 메모리 상의 독립적인 데이터 구조이기 때문에 별도로 DataRelation을 설정해야 함
+- DB의 제약조건은 메모리에 로드된 DataSet에는 적용되지 않음
+- GetChildRows(), GetParentRow() 같은 관계형 메서드를 사용할 수 있음
+
+- <a href="https://www.youtube.com/watch?v=bS3EBD6WtE4&t=611s" target="_blank">DataRelation 예제</a>
+
+```csharp
+private DataSet dataSet;
+private const string CONNECTION_STRING = "Server=localhost;Database=test;User Id=ilyoung;Password=1234;";
+private SqlDataAdapter studentAdapter, majorAdapter;
+private SqlCommandBuilder studentBuilder, majorBuilder;
+
+private void SetTextBoxes()
+{
+    if (dataGridView1.CurrentRow == null)
+        return;
+
+    DataRow studentRow = (dataGridView1.CurrentRow.DataBoundItem as DataRowView).Row;
+    DataRow majorRow = studentRow.GetParentRow("FK_major_student");
+    textBox1.Text = studentRow["name"].ToString();
+    textBox2.Text = majorRow["name"].ToString();
+}
+
+// DataGridView의 속성 중 multiSelect, SelectionMode
+// 셀을 클릭하면 TextBox에 해당 행의 데이터를 출력
+private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+{
+    SetTextBoxes();
+}
+
+private void Form1_Load(object sender, EventArgs e)
+{
+    try
+    {
+        // DataAdapter는 필요할 때만 연결을 사용하므로, 계속 연결을 유지할 필요가 없음
+        using (var conn = new SqlConnection(CONNECTION_STRING))
+        {
+            dataSet = new DataSet();
+            
+            studentAdapter = new SqlDataAdapter("SELECT * FROM Table_student", conn);
+            studentBuilder = new SqlCommandBuilder(studentAdapter);
+            studentAdapter.Fill(dataSet, "Table_student");
+            dataGridView1.DataSource = dataSet.Tables["Table_student"];
+            
+            majorAdapter = new SqlDataAdapter("SELECT * FROM Table_major", conn);
+            majorBuilder = new SqlCommandBuilder(majorAdapter);
+            majorAdapter.Fill(dataSet, "Table_major");
+            dataGridView2.DataSource = dataSet.Tables["Table_major"];
+            
+            // DataRelation 명명 규칙 : FK_[참조되는 테이블]_[참조하는 테이블]
+            var dataRelation = new DataRelation("FK_major_student", dataSet.Tables["Table_major"].Columns["no"], dataSet.Tables["Table_student"].Columns["majorNo"]);
+            dataSet.Relations.Add(dataRelation);
+
+            SetTextBoxes();
+        }
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Form1_Load() : {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+```
+
+### 10. Data Source Configuration Wizard
+
+- <a href="https://www.youtube.com/watch?v=DbA--gLfWN0&t=932s" target="_blank">DB를 연결하고 데이터를 가져오는 과정을 자동화</a>
+- data Source 탭에서 Add New Data Source 선택
+- Database를 선택하고 연결 설정
+- 데이터베이스 개체 선택
+- table 개체를 드래그앤드롭해서 form에 추가하는것만으로 자동적으로 dataGridView 생성과 데이터 연결
+- 삽입, 삭제, 수정 버튼이 자동 생성됨
