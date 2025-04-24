@@ -9,7 +9,7 @@ tags: [Csharp, WinForm, DevExpress]
 
 - DevExpress v19.2
 
-### 2. <a href="https://www.youtube.com/watch?v=TZjkvn1WRac&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs" target="_blank">Login</a>
+### 2. <a href="https://www.youtube.com/watch?v=5ava09fiJic&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=5" target="_blank">Login</a>
 
 - 무료 아이콘 사이트 : <a href="https://www.flaticon.com/" target="_blank">flaticon</a>
   - 이이콘은 32px로 저장
@@ -81,19 +81,19 @@ public partial class FormLogin : Form
 
 ### 6. <a href="https://www.youtube.com/watch?v=SF_vijg236U&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=12" target="_blank">FluentDesignForm</a>
 
-### 7. <a href="https://www.youtube.com/watch?v=SF_vijg236U&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=13" target="_blank">UI-ReadyForm</a>
+### 7. <a href="https://www.youtube.com/watch?v=tf8ZyrBQmSI&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=13" target="_blank">UI-ReadyForm</a>
 
 - dataLayoutControl1을 지우고, devForm의 layoutControl1을 카피해서 붙여넣어야 함
 
-### 8. <a href="https://www.youtube.com/watch?v=SF_vijg236U&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=14" target="_blank">UI-ReadyForm2</a>
+### 8. <a href="https://www.youtube.com/watch?v=s6JVDB1rDwM&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=14" target="_blank">UI-ReadyForm2</a>
 
-### 9. <a href="https://www.youtube.com/watch?v=SF_vijg236U&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=15" target="_blank">DXValidationProvider</a>
+### 9. <a href="https://www.youtube.com/watch?v=NethGJimORo&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=15" target="_blank">DXValidationProvider</a>
 
 - DXValidationProvider : 유효성 체크
   - 속성 : ValidationMode(auto)
   - Customize Validation Rules -> Control(textEditID) -> Conditional Validation -> ConditionOperater(IsNotBlank) -> ErrorType(Critical)
 
-### 10. <a href="https://www.youtube.com/watch?v=SF_vijg236U&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=16" target="_blank">PdfViewer</a>
+### 10. <a href="https://www.youtube.com/watch?v=RxXyXDtdGmE&list=PLMa5a9Dh6SlgqaMMd_E-GzRyJPZ0sOOhs&index=16" target="_blank">PdfViewer</a>
 
 - form 속성 : startPosition = CenterScreen
 - pdfViewer > Dock in parent container > Create Ribbon > Create "PDF Viewer" Bar > Create "Comment" Bar
