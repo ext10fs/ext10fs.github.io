@@ -2,7 +2,7 @@
 layout: single
 title: "Find Closest Node to Given Two Nodes(LeetCode)"
 categories: CodingTest
-tags: [graph]
+tags: [Graph, BFS]
 ---
 
 ## <a href="https://leetcode.com/problems/find-closest-node-to-given-two-nodes" target="_blank">Find Closest Node to Given Two Nodes</a>
@@ -51,8 +51,8 @@ int closestMeetingNode(vector<int>& edges, int node1, int node2)
 
 ### 풀이
 
-- 힌트에서는 BFS를 이용하라고 했으나 단방향 싱글 연결이므로 단순 반복문으로 node1, node2와의 거리를 전부 구할수 있음
+- 힌트에서는 BFS를 이용하라고 했으나 단방향 싱글 연결이므로 두가지 경로는 나오지 않음, 예외처리는 필요 (v1[idx] < 0)
+- 그래서 단순 반복문으로 node1, node2와의 거리를 전부 구할수 있음
 - 도달할수 없으면 거리는 -1로 표시
 - 각 노드에 대해 node1과 node2에서의 거리를 비교하여 둘 중 더 큰 값을 구함
 - 그렇게 구한 값들 중 가장 작은 값을 찾은후 반환
-- 순환 구조에 대한 예외처리 필요
