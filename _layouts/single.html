@@ -32,7 +32,14 @@ layout: default
         <header>
           {% if page.title -%}
           <h1 id="page-title" class="page__title" itemprop="headline">
-            <a href="{{ page.url | absolute_url }}" itemprop="url">{{ page.title | markdownify | remove: "<p>" | remove: "</p>" }}</a>
+            {% if page.title_link %}
+              <a href="{{ page.title_link }}" target="_blank" rel="noopener noreferrer">
+                {{ page.title | markdownify | remove: "<p>" | remove: "</p>" }}
+              </a>
+            {% else %}
+              <a href="{{ page.url | absolute_url }}" itemprop="url">
+                {{ page.title | markdownify | remove: "<p>" | remove: "</p>" }}
+            {% endif %}
           </h1>
           {%- endif %}
           {% include page__meta.html %}
